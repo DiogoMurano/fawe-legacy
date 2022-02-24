@@ -33,8 +33,6 @@ apply plugin: 'com.github.johnrengelman.shadow'
 // We only want the shadow jar produced
 shadowJar {
     dependencies {
-        include dependency('io.github.whilein.wcommons:agent:0.1.48')
-        include dependency('io.github.whilein.wcommons:util:0.1.48')
         include dependency('com.github.luben:zstd-jni:1.1.1')
         include dependency('co.aikar:fastutil-lite:1.0')
         include dependency(':core')
@@ -42,8 +40,6 @@ shadowJar {
 
     archiveFileName = "FastAsyncWorldEdit.jar"
     destinationDirectory = new File(rootDir, "output")
-
-    relocate('w', 'com.sk89q.worldedit.internal.w')
 }
 
 build.dependsOn(shadowJar);
