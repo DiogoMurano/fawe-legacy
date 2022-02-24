@@ -4,8 +4,26 @@ import com.boydti.fawe.Fawe;
 import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.FaweCache;
 import com.boydti.fawe.config.BBC;
-import com.boydti.fawe.jnbt.anvil.*;
-import com.boydti.fawe.jnbt.anvil.filters.*;
+import com.boydti.fawe.jnbt.anvil.MCAClipboard;
+import com.boydti.fawe.jnbt.anvil.MCAFile;
+import com.boydti.fawe.jnbt.anvil.MCAFilter;
+import com.boydti.fawe.jnbt.anvil.MCAFilterCounter;
+import com.boydti.fawe.jnbt.anvil.MCAQueue;
+import com.boydti.fawe.jnbt.anvil.filters.CountFilter;
+import com.boydti.fawe.jnbt.anvil.filters.CountIdFilter;
+import com.boydti.fawe.jnbt.anvil.filters.DebugFixAir;
+import com.boydti.fawe.jnbt.anvil.filters.DeleteBiomeFilterSimple;
+import com.boydti.fawe.jnbt.anvil.filters.DeleteOldFilter;
+import com.boydti.fawe.jnbt.anvil.filters.DeleteUnclaimedFilter;
+import com.boydti.fawe.jnbt.anvil.filters.DeleteUninhabitedFilter;
+import com.boydti.fawe.jnbt.anvil.filters.MappedReplacePatternFilter;
+import com.boydti.fawe.jnbt.anvil.filters.RemapFilter;
+import com.boydti.fawe.jnbt.anvil.filters.RemoveLayerFilter;
+import com.boydti.fawe.jnbt.anvil.filters.ReplacePatternFilter;
+import com.boydti.fawe.jnbt.anvil.filters.ReplaceSimpleFilter;
+import com.boydti.fawe.jnbt.anvil.filters.SetPatternFilter;
+import com.boydti.fawe.jnbt.anvil.filters.TrimAirFilter;
+import com.boydti.fawe.jnbt.anvil.filters.TrimFlatFilter;
 import com.boydti.fawe.jnbt.anvil.history.IAnvilHistory;
 import com.boydti.fawe.jnbt.anvil.history.NullAnvilHistory;
 import com.boydti.fawe.object.FawePlayer;
@@ -20,8 +38,11 @@ import com.boydti.fawe.util.SetQueue;
 import com.boydti.fawe.util.StringMan;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.worldedit.*;
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BlockType;
 import com.sk89q.worldedit.entity.Player;
@@ -37,9 +58,12 @@ import com.sk89q.worldedit.world.biome.BaseBiome;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
-
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -264,26 +288,6 @@ public class AnvilCommands {
         long duration = MainUtil.timeToSec(time) * 1000l;
         DeleteOldFilter filter = new DeleteOldFilter(duration);
         DeleteOldFilter result = runWithWorld(player, folder, filter, true);
-        if (result != null) player.print(BBC.getPrefix() + BBC.VISITOR_BLOCK.format(result.getTotal()));
-    }
-
-    @Command(
-            aliases = {"trimallplots", },
-            desc = "Trim chunks in a Plot World",
-            help = "Trim chunks in a Plot World\n" +
-                    "Unclaimed chunks will be deleted\n" +
-                    "Unmodified chunks will be deleted\n" +
-                    "Use -v to also delete unvisited chunks\n"
-    )
-    @CommandPermissions("worldedit.anvil.trimallplots")
-    public void trimAllPlots(Player player, @Switch('v') boolean deleteUnvisited) throws WorldEditException {
-        String folder = Fawe.imp().getWorldName(player.getWorld());
-        int visitTime = deleteUnvisited ? 1 : -1;
-        PlotTrimFilter filter = new PlotTrimFilter(player.getWorld(), 0, visitTime, 600000);
-//        PlotTrimFilter result = runWithWorld(player, folder, filter, true);
-        FaweQueue defaultQueue = SetQueue.IMP.getNewQueue(folder, true, false);
-        MCAQueue queue = new MCAQueue(defaultQueue);
-        PlotTrimFilter result = queue.filterWorld(filter);
         if (result != null) player.print(BBC.getPrefix() + BBC.VISITOR_BLOCK.format(result.getTotal()));
     }
 

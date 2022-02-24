@@ -22,8 +22,13 @@ package com.sk89q.worldedit.bukkit;
 import com.boydti.fawe.Fawe;
 import com.boydti.fawe.bukkit.FaweBukkit;
 import com.boydti.fawe.bukkit.v0.BukkitQueue_0;
-import com.sk89q.worldedit.*;
+import com.sk89q.worldedit.BlockVector2D;
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.LocalWorld;
 import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.Vector2D;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.blocks.BaseItemStack;
 import com.sk89q.worldedit.blocks.LazyBlock;
@@ -34,12 +39,11 @@ import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.TreeGenerator;
 import com.sk89q.worldedit.world.biome.BaseBiome;
 import com.sk89q.worldedit.world.registry.WorldData;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.logging.Level;
-import javax.annotation.Nullable;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Effect;
+import org.bukkit.Material;
+import org.bukkit.TreeType;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -50,11 +54,18 @@ import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-
-import com.sk89q.worldedit.util.Location;
 
 public class BukkitWorld extends LocalWorld {
 
@@ -107,7 +118,6 @@ public class BukkitWorld extends LocalWorld {
         FaweBukkit.Version version = Fawe.<FaweBukkit>imp().getVersion();
         switch (version) {
             case NONE:
-            case v1_7_R4:
             case v1_8_R3:
             case v1_9_R2:
             case v1_10_R1:

@@ -63,7 +63,6 @@ permissions:
       worldedit.generation.pumpkins: true
       worldedit.generation.pyramid: true
       worldedit.generation.shape: true
-      worldedit.biome.set: true
       worldedit.history.undo: true
       worldedit.history.redo: true
       worldedit.history.rollback: true

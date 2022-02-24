@@ -4,10 +4,6 @@ import com.boydti.fawe.Fawe;
 import com.boydti.fawe.config.Settings;
 import com.boydti.fawe.object.FawePlayer;
 import com.boydti.fawe.util.TaskManager;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -17,6 +13,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.Plugin;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RenderListener implements Listener {
 
@@ -46,7 +47,6 @@ public class RenderListener implements Listener {
                     OFFSET = 8;
                     timeOut = 2;
                 } else {
-                    int tpsSqr = tps32 * tps32;
                     OFFSET = 1 + (tps32 / 102400);
                     timeOut = 162 - (tps32 / 2560);
                 }

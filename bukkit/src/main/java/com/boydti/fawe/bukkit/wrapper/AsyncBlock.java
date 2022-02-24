@@ -4,8 +4,6 @@ import com.boydti.fawe.FaweCache;
 import com.boydti.fawe.bukkit.wrapper.state.AsyncSign;
 import com.boydti.fawe.object.FaweQueue;
 import com.sk89q.worldedit.blocks.BlockID;
-import java.util.Collection;
-import java.util.List;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,6 +16,9 @@ import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
+
+import java.util.Collection;
+import java.util.List;
 
 public class AsyncBlock implements Block {
 
@@ -177,6 +178,11 @@ public class AsyncBlock implements Block {
                 return new AsyncSign(this, combined);
         }
         return new AsyncBlockState(this);
+    }
+
+    @Override
+    public BlockState getState(boolean b) {
+        return getState();
     }
 
     @Override

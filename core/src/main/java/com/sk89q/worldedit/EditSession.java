@@ -27,22 +27,46 @@ import com.boydti.fawe.config.Settings;
 import com.boydti.fawe.example.MappedFaweQueue;
 import com.boydti.fawe.jnbt.anvil.MCAQueue;
 import com.boydti.fawe.jnbt.anvil.MCAWorld;
-import com.boydti.fawe.logging.LoggingChangeSet;
-import com.boydti.fawe.logging.rollback.RollbackOptimizedHistory;
-import com.boydti.fawe.object.*;
+import com.boydti.fawe.object.FaweLimit;
+import com.boydti.fawe.object.FawePlayer;
+import com.boydti.fawe.object.FaweQueue;
+import com.boydti.fawe.object.HasFaweQueue;
+import com.boydti.fawe.object.HistoryExtent;
+import com.boydti.fawe.object.NullChangeSet;
+import com.boydti.fawe.object.RegionWrapper;
+import com.boydti.fawe.object.RunnableVal;
 import com.boydti.fawe.object.brush.visualization.VirtualWorld;
-import com.boydti.fawe.object.changeset.*;
-import com.boydti.fawe.object.clipboard.ReadOnlyClipboard;
+import com.boydti.fawe.object.changeset.BlockBagChangeSet;
+import com.boydti.fawe.object.changeset.CPUOptimizedChangeSet;
+import com.boydti.fawe.object.changeset.DiskStorageHistory;
+import com.boydti.fawe.object.changeset.FaweChangeSet;
+import com.boydti.fawe.object.changeset.MemoryOptimizedHistory;
 import com.boydti.fawe.object.clipboard.WorldCopyClipboard;
 import com.boydti.fawe.object.collection.LocalBlockVectorSet;
 import com.boydti.fawe.object.exception.FaweException;
-import com.boydti.fawe.object.extent.*;
+import com.boydti.fawe.object.extent.FastWorldEditExtent;
+import com.boydti.fawe.object.extent.FaweRegionExtent;
+import com.boydti.fawe.object.extent.HeightBoundExtent;
+import com.boydti.fawe.object.extent.MultiRegionExtent;
+import com.boydti.fawe.object.extent.NullExtent;
+import com.boydti.fawe.object.extent.ProcessedWEExtent;
+import com.boydti.fawe.object.extent.ResettableExtent;
+import com.boydti.fawe.object.extent.SingleRegionExtent;
+import com.boydti.fawe.object.extent.SlowExtent;
+import com.boydti.fawe.object.extent.SourceMaskExtent;
+import com.boydti.fawe.object.extent.StripNBTExtent;
 import com.boydti.fawe.object.function.SurfaceRegionFunction;
 import com.boydti.fawe.object.mask.ResettableMask;
 import com.boydti.fawe.object.pattern.ExistingPattern;
 import com.boydti.fawe.object.progress.ChatProgressTracker;
 import com.boydti.fawe.object.progress.DefaultProgressTracker;
-import com.boydti.fawe.util.*;
+import com.boydti.fawe.util.ExtentTraverser;
+import com.boydti.fawe.util.MaskTraverser;
+import com.boydti.fawe.util.MathMan;
+import com.boydti.fawe.util.MemUtil;
+import com.boydti.fawe.util.Perm;
+import com.boydti.fawe.util.SetQueue;
+import com.boydti.fawe.util.TaskManager;
 import com.boydti.fawe.wrappers.WorldWrapper;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.worldedit.blocks.BaseBlock;
@@ -57,7 +81,6 @@ import com.sk89q.worldedit.extent.ChangeSetExtent;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.extent.MaskingExtent;
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.inventory.BlockBag;
 import com.sk89q.worldedit.extent.inventory.BlockBagExtent;
 import com.sk89q.worldedit.extent.world.SurvivalModeExtent;
@@ -67,13 +90,27 @@ import com.sk89q.worldedit.function.RegionMaskingFilter;
 import com.sk89q.worldedit.function.block.BlockReplace;
 import com.sk89q.worldedit.function.block.Naturalizer;
 import com.sk89q.worldedit.function.generator.GardenPatchGenerator;
-import com.sk89q.worldedit.function.mask.*;
+import com.sk89q.worldedit.function.mask.BlockMask;
+import com.sk89q.worldedit.function.mask.BoundedHeightMask;
+import com.sk89q.worldedit.function.mask.ExistingBlockMask;
+import com.sk89q.worldedit.function.mask.FuzzyBlockMask;
+import com.sk89q.worldedit.function.mask.Mask;
+import com.sk89q.worldedit.function.mask.MaskIntersection;
+import com.sk89q.worldedit.function.mask.Masks;
+import com.sk89q.worldedit.function.mask.NoiseFilter2D;
+import com.sk89q.worldedit.function.mask.RegionMask;
 import com.sk89q.worldedit.function.operation.ChangeSetExecutor;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.function.pattern.BlockPattern;
 import com.sk89q.worldedit.function.util.RegionOffset;
-import com.sk89q.worldedit.function.visitor.*;
+import com.sk89q.worldedit.function.visitor.DirectionalVisitor;
+import com.sk89q.worldedit.function.visitor.DownwardVisitor;
+import com.sk89q.worldedit.function.visitor.FlatRegionVisitor;
+import com.sk89q.worldedit.function.visitor.LayerVisitor;
+import com.sk89q.worldedit.function.visitor.NonRisingVisitor;
+import com.sk89q.worldedit.function.visitor.RecursiveVisitor;
+import com.sk89q.worldedit.function.visitor.RegionVisitor;
 import com.sk89q.worldedit.history.UndoContext;
 import com.sk89q.worldedit.history.change.BlockChange;
 import com.sk89q.worldedit.history.changeset.ChangeSet;
@@ -86,7 +123,11 @@ import com.sk89q.worldedit.math.interpolation.Node;
 import com.sk89q.worldedit.math.noise.RandomNoise;
 import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.patterns.Pattern;
-import com.sk89q.worldedit.regions.*;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.EllipsoidRegion;
+import com.sk89q.worldedit.regions.FlatRegion;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.regions.Regions;
 import com.sk89q.worldedit.regions.shape.ArbitraryBiomeShape;
 import com.sk89q.worldedit.regions.shape.ArbitraryShape;
 import com.sk89q.worldedit.regions.shape.RegionShape;
@@ -98,10 +139,18 @@ import com.sk89q.worldedit.world.SimpleWorld;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.biome.BaseBiome;
 import com.sk89q.worldedit.world.registry.WorldData;
-import java.util.*;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -263,11 +312,8 @@ public class EditSession extends AbstractDelegateExtent implements HasFaweQueue,
             if (changeSet == null) {
                 if (Settings.IMP.HISTORY.USE_DISK) {
                     UUID uuid = player == null ? CONSOLE : player.getUUID();
-                    if (Settings.IMP.HISTORY.USE_DATABASE) {
-                        changeSet = new RollbackOptimizedHistory(world, uuid);
-                    } else {
-                        changeSet = new DiskStorageHistory(world, uuid);
-                    }
+
+                    changeSet = new DiskStorageHistory(world, uuid);
                 } else if (combineStages && Settings.IMP.HISTORY.COMPRESSION_LEVEL == 0 && !(queue instanceof MCAQueue)) {
                     changeSet = new CPUOptimizedChangeSet(world);
                 } else {
@@ -277,13 +323,8 @@ public class EditSession extends AbstractDelegateExtent implements HasFaweQueue,
             if (this.limit.SPEED_REDUCTION > 0) {
                 this.bypassHistory = new SlowExtent(this.bypassHistory, this.limit.SPEED_REDUCTION);
             }
-            if (changeSet instanceof NullChangeSet && Fawe.imp().getBlocksHubApi() != null && player != null) {
-                changeSet = LoggingChangeSet.wrap(player, changeSet);
-            }
+
             if (!(changeSet instanceof NullChangeSet)) {
-                if (!(changeSet instanceof LoggingChangeSet) && player != null && Fawe.imp().getBlocksHubApi() != null) {
-                    changeSet = LoggingChangeSet.wrap(player, changeSet);
-                }
                 if (this.blockBag != null) {
                     changeSet = new BlockBagChangeSet(changeSet, blockBag, limit.INVENTORY_MODE == 1);
                 }

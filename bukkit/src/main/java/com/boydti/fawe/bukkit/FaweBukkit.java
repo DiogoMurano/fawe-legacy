@@ -4,26 +4,19 @@ import com.boydti.fawe.Fawe;
 import com.boydti.fawe.IFawe;
 import com.boydti.fawe.bukkit.chat.BukkitChatManager;
 import com.boydti.fawe.bukkit.listener.BrushListener;
-import com.boydti.fawe.bukkit.listener.BukkitImageListener;
-import com.boydti.fawe.bukkit.listener.CFIPacketListener;
 import com.boydti.fawe.bukkit.listener.RenderListener;
-import com.boydti.fawe.bukkit.regions.*;
+import com.boydti.fawe.bukkit.regions.FreeBuildRegion;
+import com.boydti.fawe.bukkit.regions.Worldguard;
 import com.boydti.fawe.bukkit.util.BukkitReflectionUtils;
 import com.boydti.fawe.bukkit.util.BukkitTaskMan;
 import com.boydti.fawe.bukkit.util.ItemUtil;
-import com.boydti.fawe.bukkit.util.VaultUtil;
-import com.boydti.fawe.bukkit.util.cui.CUIListener;
-import com.boydti.fawe.bukkit.util.cui.StructureCUI;
-import com.boydti.fawe.bukkit.util.image.BukkitImageViewer;
 import com.boydti.fawe.bukkit.v0.BukkitQueue_0;
 import com.boydti.fawe.bukkit.v0.BukkitQueue_All;
-import com.boydti.fawe.bukkit.v0.ChunkListener_8;
 import com.boydti.fawe.bukkit.v0.ChunkListener_9;
 import com.boydti.fawe.bukkit.v1_10.BukkitQueue_1_10;
 import com.boydti.fawe.bukkit.v1_11.BukkitQueue_1_11;
 import com.boydti.fawe.bukkit.v1_12.BukkitQueue_1_12;
 import com.boydti.fawe.bukkit.v1_12.NMSRegistryDumper;
-import com.boydti.fawe.bukkit.v1_7.BukkitQueue17;
 import com.boydti.fawe.bukkit.v1_8.BukkitQueue18R3;
 import com.boydti.fawe.bukkit.v1_9.BukkitQueue_1_9_R1;
 import com.boydti.fawe.config.BBC;
@@ -32,7 +25,9 @@ import com.boydti.fawe.object.FaweCommand;
 import com.boydti.fawe.object.FawePlayer;
 import com.boydti.fawe.object.FaweQueue;
 import com.boydti.fawe.regions.FaweMaskManager;
-import com.boydti.fawe.util.*;
+import com.boydti.fawe.util.MainUtil;
+import com.boydti.fawe.util.ReflectionUtils;
+import com.boydti.fawe.util.TaskManager;
 import com.boydti.fawe.util.cui.CUI;
 import com.boydti.fawe.util.image.ImageViewer;
 import com.boydti.fawe.util.metrics.BStats;
@@ -42,15 +37,6 @@ import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.EditSessionBlockChangeDelegate;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.world.World;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -59,27 +45,22 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.primesoft.blockshub.BlocksHubBukkit;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 public class FaweBukkit implements IFawe, Listener {
 
     private final BukkitMain plugin;
-    private VaultUtil vault;
     private WorldEditPlugin worldedit;
     private ItemUtil itemUtil;
-
-    private boolean listeningImages;
-    private BukkitImageListener imageListener;
-    private CFIPacketListener packetListener;
-
-    private boolean listeningCui;
-    private CUIListener cuiListener;
-
-    public VaultUtil getVault() {
-        return this.vault;
-    }
 
     public WorldEditPlugin getWorldEditPlugin() {
         if (this.worldedit == null) {
@@ -140,71 +121,22 @@ public class FaweBukkit implements IFawe, Listener {
                 // This class
                 Bukkit.getPluginManager().registerEvents(FaweBukkit.this, FaweBukkit.this.plugin);
 
-                // The tick limiter
-                try {
-                    Class.forName("sun.misc.SharedSecrets");
-                    new ChunkListener_8();
-                } catch (ClassNotFoundException e) {
-                    new ChunkListener_9();
-                }
+                new ChunkListener_9();
             }
         });
     }
 
     @Override
     public CUI getCUI(FawePlayer player) {
-        if (Settings.IMP.EXPERIMENTAL.VANILLA_CUI) {
-            if (listeningCui && cuiListener == null) return null;
-            listeningCui = true;
-            if (cuiListener == null) {
-                Plugin protocolLib = Bukkit.getPluginManager().getPlugin("ProtocolLib");
-                if (protocolLib != null && protocolLib.isEnabled()) {
-                    cuiListener = new CUIListener(plugin);
-                } else {
-                    return null;
-                }
-            }
-            return new StructureCUI(player);
-        }
         return null;
     }
 
     @Override
     public void registerPacketListener() {
-        PluginManager manager = Bukkit.getPluginManager();
-        if (packetListener == null && manager.getPlugin("ProtocolLib") != null) {
-            packetListener = new CFIPacketListener(plugin);
-        }
     }
 
     @Override
-    public synchronized ImageViewer getImageViewer(FawePlayer fp) {
-        if (listeningImages && imageListener == null) return null;
-        try {
-            listeningImages = true;
-            registerPacketListener();
-            PluginManager manager = Bukkit.getPluginManager();
-
-            if (manager.getPlugin("PacketListenerApi") == null) {
-                File output = new File(plugin.getDataFolder().getParentFile(), "PacketListenerAPI_v3.6.0-SNAPSHOT.jar");
-                byte[] jarData = Jars.PL_v3_6_0.download();
-                try (FileOutputStream fos = new FileOutputStream(output)) {
-                    fos.write(jarData);
-                }
-            }
-            if (manager.getPlugin("MapManager") == null) {
-                File output = new File(plugin.getDataFolder().getParentFile(), "MapManager_v1.4.0-SNAPSHOT.jar");
-                byte[] jarData = Jars.MM_v1_4_0.download();
-                try (FileOutputStream fos = new FileOutputStream(output)) {
-                    fos.write(jarData);
-                }
-            }
-            BukkitImageViewer viewer = new BukkitImageViewer((Player) fp.parent);
-            if (imageListener == null) {
-                this.imageListener = new BukkitImageListener(plugin);
-            }
-            return viewer;
-        } catch (Throwable ignore) {}
+    public ImageViewer getImageViewer(FawePlayer fp) {
         return null;
     }
 
@@ -337,11 +269,6 @@ public class FaweBukkit implements IFawe, Listener {
      */
     @Override
     public void setupVault() {
-        try {
-            this.vault = new VaultUtil();
-        } catch (final Throwable e) {
-            this.debug("&dVault is used for persistent `/wea` toggles.");
-        }
     }
 
     @Override
@@ -492,66 +419,6 @@ public class FaweBukkit implements IFawe, Listener {
                 MainUtil.handleError(e);
             }
         }
-        final Plugin plotmePlugin = Bukkit.getServer().getPluginManager().getPlugin("PlotMe");
-        if ((plotmePlugin != null) && plotmePlugin.isEnabled()) {
-            try {
-                managers.add(new PlotMeFeature(plotmePlugin, this));
-                Fawe.debug("Plugin 'PlotMe' found. Using it now.");
-            } catch (final Throwable e) {
-                MainUtil.handleError(e);
-            }
-        }
-        final Plugin townyPlugin = Bukkit.getServer().getPluginManager().getPlugin("Towny");
-        if ((townyPlugin != null) && townyPlugin.isEnabled()) {
-            try {
-                managers.add(new TownyFeature(townyPlugin, this));
-                Fawe.debug("Plugin 'Towny' found. Using it now.");
-            } catch (final Throwable e) {
-                MainUtil.handleError(e);
-            }
-        }
-        final Plugin factionsPlugin = Bukkit.getServer().getPluginManager().getPlugin("Factions");
-        if ((factionsPlugin != null) && factionsPlugin.isEnabled()) {
-            try {
-                managers.add(new FactionsFeature(factionsPlugin, this));
-                Fawe.debug("Plugin 'Factions' found. Using it now.");
-            } catch (final Throwable e) {
-                try {
-                    managers.add(new FactionsOneFeature(factionsPlugin, this));
-                    Fawe.debug("Plugin 'FactionsUUID' found. Using it now.");
-                } catch (Throwable e3) {
-                    MainUtil.handleError(e);
-                }
-            }
-        }
-        final Plugin residencePlugin = Bukkit.getServer().getPluginManager().getPlugin("Residence");
-        if ((residencePlugin != null) && residencePlugin.isEnabled()) {
-            try {
-                managers.add(new ResidenceFeature(residencePlugin, this));
-                Fawe.debug("Plugin 'Residence' found. Using it now.");
-            } catch (final Throwable e) {
-                MainUtil.handleError(e);
-            }
-        }
-        final Plugin griefpreventionPlugin = Bukkit.getServer().getPluginManager().getPlugin("GriefPrevention");
-        if ((griefpreventionPlugin != null) && griefpreventionPlugin.isEnabled()) {
-            try {
-                managers.add(new GriefPreventionFeature(griefpreventionPlugin, this));
-                Fawe.debug("Plugin 'GriefPrevention' found. Using it now.");
-            } catch (final Throwable e) {
-                MainUtil.handleError(e);
-            }
-        }
-
-        final Plugin aSkyBlock = Bukkit.getServer().getPluginManager().getPlugin("ASkyBlock");
-        if ((aSkyBlock != null) && aSkyBlock.isEnabled()) {
-            try {
-                managers.add(new ASkyBlockHook(aSkyBlock, this));
-                Fawe.debug("Plugin 'ASkyBlock' found. Using it now.");
-            } catch (final Throwable e) {
-                MainUtil.handleError(e);
-            }
-        }
 
         if (Settings.IMP.EXPERIMENTAL.FREEBUILD) {
             try {
@@ -605,19 +472,9 @@ public class FaweBukkit implements IFawe, Listener {
         return Bukkit.getOfflinePlayer(uuid).getName();
     }
 
-    private boolean enabledBlocksHub = true;
-
     @Override
     public Object getBlocksHubApi() {
-        if (!enabledBlocksHub) {
-            return null;
-        }
-        Plugin blocksHubPlugin = Bukkit.getPluginManager().getPlugin("BlocksHub");
-        if (blocksHubPlugin == null) {
-            enabledBlocksHub = false;
-            return null;
-        }
-        return ((BlocksHubBukkit) blocksHubPlugin).getApi();
+        return null;
     }
 
     @Override
@@ -652,7 +509,6 @@ public class FaweBukkit implements IFawe, Listener {
     }
 
     public enum Version {
-        v1_7_R4,
         v1_8_R3,
         v1_9_R2,
         v1_10_R1,
@@ -665,8 +521,6 @@ public class FaweBukkit implements IFawe, Listener {
 
     private FaweQueue getQueue(World world) {
         switch (getVersion()) {
-            case v1_7_R4:
-                return new BukkitQueue17(world);
             case v1_8_R3:
                 return new BukkitQueue18R3(world);
             case v1_9_R2:
@@ -685,8 +539,6 @@ public class FaweBukkit implements IFawe, Listener {
 
     private FaweQueue getQueue(String world) {
         switch (getVersion()) {
-            case v1_7_R4:
-                return new BukkitQueue17(world);
             case v1_8_R3:
                 return new BukkitQueue18R3(world);
             case v1_9_R2:

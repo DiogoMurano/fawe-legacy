@@ -2,8 +2,6 @@ package com.boydti.fawe.object.changeset;
 
 import com.boydti.fawe.Fawe;
 import com.boydti.fawe.config.Settings;
-import com.boydti.fawe.database.DBHandler;
-import com.boydti.fawe.database.RollbackDatabase;
 import com.boydti.fawe.object.FaweInputStream;
 import com.boydti.fawe.object.FawePlayer;
 import com.boydti.fawe.object.IntegerPair;
@@ -15,6 +13,7 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.World;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 import java.io.DataOutput;
 import java.io.File;
 import java.io.FileInputStream;
@@ -123,10 +122,6 @@ public class DiskStorageHistory extends FaweStreamChangeSet {
     public void delete() {
         Fawe.debug("Deleting history: " + Fawe.imp().getWorldName(getWorld()) + "/" + uuid + "/" + index);
         deleteFiles();
-        if (Settings.IMP.HISTORY.USE_DATABASE) {
-            RollbackDatabase db = DBHandler.IMP.getDatabase(getWorld());
-            db.delete(uuid, index);
-        }
     }
 
     public void deleteFiles() {

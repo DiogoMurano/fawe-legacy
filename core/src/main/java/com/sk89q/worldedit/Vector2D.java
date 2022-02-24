@@ -21,6 +21,7 @@ package com.sk89q.worldedit;
 
 import com.boydti.fawe.util.MathMan;
 import com.sk89q.worldedit.math.transform.AffineTransform;
+
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -619,19 +620,15 @@ public class Vector2D implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Vector2D)) {
-            return false;
-        }
-
-        Vector2D other = (Vector2D) obj;
-        return other.getX() == this.getX() && other.getZ() == this.getZ();
-
+        return obj instanceof Vector2D other
+               && other.getX() == this.getX()
+               && other.getZ() == this.getZ();
     }
 
     @Override
     public int hashCode() {
-        return ((new Double(getX())).hashCode() >> 13) ^
-                (new Double(getZ())).hashCode();
+        return ((Double.hashCode(getX())) >> 13) ^
+               (Double.hashCode(getZ()));
     }
 
     @Override

@@ -1,11 +1,6 @@
 package com.boydti.fawe.object.clipboard.remap;
 
 import com.boydti.fawe.FaweCache;
-import com.google.common.io.Resources;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.intellectualcrafters.plot.util.MathMan;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.WorldEditException;
@@ -15,13 +10,10 @@ import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.registry.BundledBlockData;
-import java.io.File;
+
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ClipboardRemapper {
@@ -201,39 +193,6 @@ public class ClipboardRemapper {
             }
         }
         return id;
-    }
-
-    private Map<String, List<Integer>> parse(File file) throws IOException {
-        JsonParser parser = new JsonParser();
-        JsonObject toParse = (JsonObject) parser.parse(Resources.toString(file.toURL(), Charset.defaultCharset()));
-        Map<String, List<Integer>> map = new HashMap<>();
-
-        outer:
-        for (Map.Entry<String, JsonElement> entry : toParse.entrySet()) {
-            String key = entry.getKey();
-            JsonObject value = entry.getValue().getAsJsonObject();
-            if (MathMan.isInteger(key)) {
-                int id = Integer.parseInt(key);
-                for (Map.Entry<String, JsonElement> dataEntry : value.entrySet()) {
-                    String dataKey = dataEntry.getKey();
-                    if (MathMan.isInteger(dataKey)) {
-                        int data = Integer.parseInt(dataEntry.getKey());
-                        int combined = (id << 4) + data;
-                        String name = dataEntry.getValue().getAsJsonObject().get("intermediateID").getAsString();
-                        map.putIfAbsent(name, new ArrayList<>());
-                        map.get(name).add(combined);
-                    }
-                }
-            } else {
-                String name = entry.getKey();
-                int id = value.get("id").getAsInt();
-                int data = value.get("data").getAsInt();
-                int combined = FaweCache.getCombined(id, data);
-                map.putIfAbsent(name, new ArrayList<>());
-                map.get(name).add(combined);
-            }
-        }
-        return map;
     }
 
     private HashMap<BaseBlock, BaseBlock> getPEtoPCMappings() {

@@ -1,5 +1,8 @@
 package com.boydti.fawe.util;
 
+import sun.misc.Unsafe;
+import w.util.Root;
+
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -7,11 +10,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
-
-import sun.reflect.ConstructorAccessor;
-import sun.reflect.FieldAccessor;
-import sun.reflect.ReflectionFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author DPOH-VAR
@@ -19,13 +22,44 @@ import sun.reflect.ReflectionFactory;
  */
 @SuppressWarnings({"UnusedDeclaration", "rawtypes"})
 public class ReflectionUtils {
+    private static Unsafe UNSAFE;
+
+    static {
+        try {
+            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            UNSAFE = (Unsafe) unsafeField.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setAccessibleNonFinal(Field field) {
+        // let's make the field accessible
+        field.setAccessible(true);
+
+        // next we change the modifier in the Field instance to
+        // not be final anymore, thus tricking reflection into
+        // letting us modify the static final field
+        if (Modifier.isFinal(field.getModifiers())) {
+            try {
+                // blank out the final bit in the modifiers int
+                Root.trustedLookup()
+                        .findSetter(Field.class, "modifiers", int.class)
+                        .invokeExact(field, field.getModifiers() & ~Modifier.FINAL);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static <T> T as(Class<T> t, Object o) {
         return t.isInstance(o) ? t.cast(o) : null;
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName) {
-        return addEnum(enumType, enumName, new Class<?>[]{} , new Object[]{});
+        return addEnum(enumType, enumName, new Class<?>[]{}, new Object[]{});
     }
 
     public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName, Class<?>[] additionalTypes, Object[] additionalValues) {
@@ -108,36 +142,22 @@ public class ReflectionUtils {
         return enumClass.cast(getConstructorAccessor(enumClass, additionalTypes).newInstance(parms));
     }
 
-    private static ConstructorAccessor getConstructorAccessor(Class<?> enumClass,
-                                                              Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
+    private static Constructor getConstructorAccessor(Class<?> enumClass,
+                                                      Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
         Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
         parameterTypes[0] = String.class;
         parameterTypes[1] = int.class;
         System.arraycopy(additionalParameterTypes, 0,
                 parameterTypes, 2, additionalParameterTypes.length);
-        return ReflectionFactory.getReflectionFactory().newConstructorAccessor(enumClass.getDeclaredConstructor(parameterTypes));
+        return enumClass.getDeclaredConstructor(parameterTypes);
     }
 
     public static void setFailsafeFieldValue(Field field, Object target, Object value)
             throws NoSuchFieldException, IllegalAccessException {
-
-        // let's make the field accessible
-        field.setAccessible(true);
-
-        // next we change the modifier in the Field instance to
-        // not be final anymore, thus tricking reflection into
-        // letting us modify the static final field
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        int modifiers = modifiersField.getInt(field);
-
-        // blank out the final bit in the modifiers int
-        modifiers &= ~Modifier.FINAL;
-        modifiersField.setInt(field, modifiers);
+        setAccessibleNonFinal(field);
 
         try {
-            FieldAccessor fa = ReflectionFactory.getReflectionFactory().newFieldAccessor(field, false);
-            fa.set(target, value);
+            field.set(target, value);
         } catch (NoSuchMethodError error) {
             field.set(target, value);
         }

@@ -1,3 +1,4 @@
-rootProject.name = 'FastAsyncWorldEdit'
+rootProject.name = 'fawe-legacy'
 
-include 'core', 'bukkit', 'favs'//, 'nukkit', 'forge189', 'forge194', 'forge110', 'forge111', 'forge112', 'sponge111', 'sponge112'//, 'forge1710'
+include ':core'
+include ':bukkit'

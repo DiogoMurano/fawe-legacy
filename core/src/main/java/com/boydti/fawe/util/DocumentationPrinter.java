@@ -20,7 +20,6 @@
 package com.boydti.fawe.util;
 
 import com.boydti.fawe.command.AnvilCommands;
-import com.boydti.fawe.command.CFICommands;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.minecraft.util.commands.NestedCommand;
@@ -46,6 +45,7 @@ import com.sk89q.worldedit.command.ToolCommands;
 import com.sk89q.worldedit.command.TransformCommands;
 import com.sk89q.worldedit.command.UtilityCommands;
 import com.sk89q.worldedit.command.WorldEditCommands;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -120,7 +120,6 @@ public final class DocumentationPrinter {
             writePermissionsWikiTable(stream, builder, "", MaskCommands.class, "/Masks");
             writePermissionsWikiTable(stream, builder, "", PatternCommands.class, "/Patterns");
             writePermissionsWikiTable(stream, builder, "", TransformCommands.class, "/Transforms");
-            writePermissionsWikiTable(stream, builder, "/cfi ", CFICommands.class, "Create From Image");
             stream.println();
             stream.print("#### Uncategorized\n");
             stream.append("| Aliases | Permission | flags | Usage |\n");

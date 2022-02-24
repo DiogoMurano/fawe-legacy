@@ -19,34 +19,16 @@
 
 package com.sk89q.worldedit.command;
 
-import com.boydti.fawe.Fawe;
-import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.config.BBC;
-import com.boydti.fawe.config.Settings;
-import com.boydti.fawe.database.DBHandler;
-import com.boydti.fawe.database.RollbackDatabase;
-import com.boydti.fawe.logging.rollback.RollbackOptimizedHistory;
 import com.boydti.fawe.object.FawePlayer;
-import com.boydti.fawe.object.FaweQueue;
-import com.boydti.fawe.object.RegionWrapper;
-import com.boydti.fawe.object.RunnableVal;
-import com.boydti.fawe.object.changeset.DiskStorageHistory;
-import com.boydti.fawe.regions.FaweMaskManager;
-import com.boydti.fawe.util.MainUtil;
-import com.boydti.fawe.util.MathMan;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.worldedit.*;
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.entity.Player;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.util.command.binding.Range;
-import com.sk89q.worldedit.util.command.binding.Switch;
-import com.sk89q.worldedit.util.command.parametric.Optional;
-import com.sk89q.worldedit.world.World;
-import java.io.File;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Commands to undo, redo, and clear history.
@@ -61,165 +43,6 @@ public class HistoryCommands extends MethodCommands {
      */
     public HistoryCommands(WorldEdit worldEdit) {
         super(worldEdit);
-    }
-
-
-    @Command(
-            aliases = {"/frb", "frb", "fawerollback", "/fawerollback", "/rollback"},
-            usage = "<user=Empire92> <radius=5> <time=3d4h>",
-            desc = "Undo a specific edit. " +
-                    " - The time uses s, m, h, d, y.\n" +
-                    " - Import from disk: /frb #import",
-            min = 1,
-            max = 3
-    )
-    @CommandPermissions("worldedit.history.rollback")
-    public void faweRollback(final Player player, LocalSession session, final String user, @Optional("0") @Range(min = 0) int radius, @Optional("0") String time, @Switch('r') boolean restore) throws WorldEditException {
-        if (!Settings.IMP.HISTORY.USE_DATABASE) {
-            BBC.SETTING_DISABLE.send(player, "history.use-database (Import with /frb #import )");
-            return;
-        }
-        switch (user.charAt(0)) {
-            case '#': {
-                if (user.equals("#import")) {
-                    if (!player.hasPermission("fawe.rollback.import")) {
-                        BBC.NO_PERM.send(player, "fawe.rollback.import");
-                        return;
-                    }
-                    File folder = MainUtil.getFile(Fawe.imp().getDirectory(), Settings.IMP.PATHS.HISTORY);
-                    if (!folder.exists()) {
-                        return;
-                    }
-                    for (File worldFolder : folder.listFiles()) {
-                        if (!worldFolder.isDirectory()) {
-                            continue;
-                        }
-                        String worldName = worldFolder.getName();
-                        World world = FaweAPI.getWorld(worldName);
-                        if (world != null) {
-                            for (File userFolder : worldFolder.listFiles()) {
-                                if (!userFolder.isDirectory()) {
-                                    continue;
-                                }
-                                String userUUID = userFolder.getName();
-                                try {
-                                    UUID uuid = UUID.fromString(userUUID);
-                                    for (File historyFile : userFolder.listFiles()) {
-                                        String name = historyFile.getName();
-                                        if (!name.endsWith(".bd")) {
-                                            continue;
-                                        }
-                                        RollbackOptimizedHistory rollback = new RollbackOptimizedHistory(world, uuid, Integer.parseInt(name.substring(0, name.length() - 3)));
-                                        DiskStorageHistory.DiskStorageSummary summary = rollback.summarize(RegionWrapper.GLOBAL(), false);
-                                        if (summary != null) {
-                                            rollback.setDimensions(new Vector(summary.minX, 0, summary.minZ), new Vector(summary.maxX, 255, summary.maxZ));
-                                            rollback.setTime(historyFile.lastModified());
-                                            RollbackDatabase db = DBHandler.IMP.getDatabase(world);
-                                            db.logEdit(rollback);
-                                            player.print(BBC.getPrefix() + "Logging: " + historyFile);
-                                        }
-                                    }
-                                } catch (IllegalArgumentException e) {
-                                    e.printStackTrace();
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    player.print(BBC.getPrefix() + "Done import!");
-                    return;
-                }
-                String toParse = user.substring(1);
-                if (!MathMan.isInteger(toParse)) {
-                    BBC.COMMAND_SYNTAX.send(player, "/frb #<index>");
-                    return;
-                }
-                int index = Integer.parseInt(toParse);
-                final World world = player.getWorld();
-                UUID uuid = player.getUniqueId();
-                DiskStorageHistory file = new DiskStorageHistory(world, uuid, index);
-                if (file.getBDFile().exists()) {
-                    if (restore) file.redo(FawePlayer.wrap(player));
-                    else file.undo(FawePlayer.wrap(player));
-                    BBC.ROLLBACK_ELEMENT.send(player, Fawe.imp().getWorldName(world) + "/" + user + "-" + index);
-                } else {
-                    BBC.TOOL_INSPECT_INFO_FOOTER.send(player, 0);
-                }
-                return;
-            }
-        }
-        UUID other = user.equalsIgnoreCase("*") ? null : Fawe.imp().getUUID(user);
-        if (other == null && !user.equalsIgnoreCase("*")) {
-            BBC.PLAYER_NOT_FOUND.send(player, user);
-            return;
-        }
-        if (radius == 0) {
-            BBC.COMMAND_SYNTAX.send(player, "/frb " + user + " <radius> <time>");
-            return;
-        }
-        long timeDiff = MainUtil.timeToSec(time) * 1000;
-        if (timeDiff == 0) {
-            BBC.COMMAND_SYNTAX.send(player, "/frb " + user + " " + radius + " <time>");
-            return;
-        }
-        radius = Math.max(radius, 0);
-        if (radius > 500) {
-            if (!player.hasPermission("fawe.admin")) {
-                BBC.WORLDEDIT_CANCEL_REASON_MAX_CHECKS.send(player);
-                return;
-            }
-        }
-        final World world = player.getWorld();
-        WorldVector origin = player.getPosition();
-        Vector bot = origin.subtract(radius, radius, radius);
-        bot.mutY(Math.max(0, bot.getY()));
-        Vector top = origin.add(radius, radius, radius);
-        top.mutY(Math.min(255, top.getY()));
-        RollbackDatabase database = DBHandler.IMP.getDatabase(world);
-        final AtomicInteger count = new AtomicInteger();
-        final FawePlayer fp = FawePlayer.wrap(player);
-
-        final FaweQueue finalQueue;
-        Region[] allowedRegions = fp.getCurrentRegions(FaweMaskManager.MaskType.OWNER);
-        if (allowedRegions == null) {
-            BBC.NO_REGION.send(fp);
-            return;
-        }
-        // TODO mask the regions bot / top to the bottom and top coord in the allowedRegions
-        // TODO: then mask the edit to the bot / top
-//        if (allowedRegions.length != 1 || !allowedRegions[0].isGlobal()) {
-//            finalQueue = new MaskedFaweQueue(SetQueue.IMP.getNewQueue(fp.getWorld(), true, false), allowedRegions);
-//        } else {
-//            finalQueue = SetQueue.IMP.getNewQueue(fp.getWorld(), true, false);
-//        }
-        database.getPotentialEdits(other, System.currentTimeMillis() - timeDiff, bot, top, new RunnableVal<DiskStorageHistory>() {
-            @Override
-            public void run(DiskStorageHistory edit) {
-                if (restore) edit.redo(fp, allowedRegions);
-                else edit.undo(fp, allowedRegions);
-                BBC.ROLLBACK_ELEMENT.send(player, Fawe.imp().getWorldName(edit.getWorld()) + "/" + user + "-" + edit.getIndex());
-                count.incrementAndGet();
-            }
-            }, new Runnable() {
-                @Override
-                public void run() {
-                    BBC.TOOL_INSPECT_INFO_FOOTER.send(player, count);
-                }
-            }, true, restore);
-    }
-
-    @Command(
-            aliases = {"/fawerestore", "/frestore"},
-            usage = "<user=Empire92|*> <radius=5> <time=3d4h>",
-            desc = "Redo a specific edit. " +
-                    " - The time uses s, m, h, d, y.\n" +
-                    " - Import from disk: /frb #import",
-            min = 1,
-            max = 3
-    )
-    @CommandPermissions("worldedit.history.rollback")
-    public void restore(final Player player, LocalSession session, final String user, @Optional("0") @Range(min = 0) int radius, @Optional("0") String time) throws WorldEditException {
-        faweRollback(player, session, user, radius, time, true);
     }
 
     @Command(

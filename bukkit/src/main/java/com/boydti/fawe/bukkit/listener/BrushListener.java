@@ -35,7 +35,7 @@ public class BrushListener implements Listener {
         FawePlayer<Object> fp = FawePlayer.wrap(bukkitPlayer);
         com.sk89q.worldedit.entity.Player player = fp.getPlayer();
         LocalSession session = fp.getSession();
-        Tool tool = session.getTool(player);
+        Tool tool = session.getTool(player.getItemInHand());
         if (tool instanceof ScrollTool) {
             final int slot = event.getNewSlot();
             final int oldSlot = event.getPreviousSlot();
@@ -70,7 +70,7 @@ public class BrushListener implements Listener {
             FawePlayer<Object> fp = FawePlayer.wrap(bukkitPlayer);
             com.sk89q.worldedit.entity.Player player = fp.getPlayer();
             LocalSession session = fp.getSession();
-            Tool tool = session.getTool(player);
+            Tool tool = session.getTool(player.getItemInHand());
             if (tool != null) {
                 if (tool instanceof MovableTool) {
                     ((MovableTool) tool).move(player);
@@ -89,7 +89,7 @@ public class BrushListener implements Listener {
             FawePlayer<Object> fp = FawePlayer.wrap(bukkitPlayer);
             com.sk89q.worldedit.entity.Player player = fp.getPlayer();
             LocalSession session = fp.getSession();
-            Tool tool = session.getTool(player);
+            Tool tool = session.getTool(player.getItemInHand());
             if (tool instanceof ResettableTool) {
                 if (((ResettableTool) tool).reset()) {
                     event.setCancelled(true);

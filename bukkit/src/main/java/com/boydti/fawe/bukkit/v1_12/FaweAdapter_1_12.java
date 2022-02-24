@@ -19,16 +19,6 @@ import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.bukkit.adapter.BukkitImplAdapter;
 import com.sk89q.worldedit.entity.BaseEntity;
 import com.sk89q.worldedit.internal.Constants;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import net.minecraft.server.v1_12_R1.BiomeBase;
 import net.minecraft.server.v1_12_R1.BlockPosition;
 import net.minecraft.server.v1_12_R1.Entity;
@@ -59,8 +49,18 @@ import org.bukkit.craftbukkit.v1_12_R1.block.CraftBlock;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
-public final class FaweAdapter_1_12 implements BukkitImplAdapter
-{
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public final class FaweAdapter_1_12 implements BukkitImplAdapter {
     private final Logger logger = Logger.getLogger(getClass().getCanonicalName());
     private final Field nbtListTagListField;
     private final Method nbtCreateTagMethod;
@@ -319,9 +319,9 @@ public final class FaweAdapter_1_12 implements BukkitImplAdapter
             return new NBTTagInt(((IntTag) foreign).getValue());
         } else if (foreign instanceof IntArrayTag) {
             return new NBTTagIntArray(((IntArrayTag) foreign).getValue());
-        } else if (foreign instanceof ListTag) {
+        } else if (foreign instanceof ListTag<?> foreignList) {
             NBTTagList tag = new NBTTagList();
-            ListTag<Tag> foreignList = (ListTag) foreign;
+
             for (Tag t : foreignList.getValue()) {
                 tag.add(fromNative(t));
             }

@@ -21,7 +21,6 @@ package com.sk89q.worldedit.extension.platform;
 
 import com.boydti.fawe.Fawe;
 import com.boydti.fawe.command.AnvilCommands;
-import com.boydti.fawe.command.CFICommand;
 import com.boydti.fawe.command.MaskBinding;
 import com.boydti.fawe.command.PatternBinding;
 import com.boydti.fawe.config.BBC;
@@ -35,9 +34,34 @@ import com.boydti.fawe.util.chat.UsageMessage;
 import com.boydti.fawe.wrappers.FakePlayer;
 import com.boydti.fawe.wrappers.LocationMaskedPlayerWrapper;
 import com.google.common.base.Joiner;
-import com.sk89q.minecraft.util.commands.*;
-import com.sk89q.worldedit.*;
-import com.sk89q.worldedit.command.*;
+import com.sk89q.minecraft.util.commands.Command;
+import com.sk89q.minecraft.util.commands.CommandContext;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandLocals;
+import com.sk89q.minecraft.util.commands.CommandPermissionsException;
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.LocalConfiguration;
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.command.BiomeCommands;
+import com.sk89q.worldedit.command.BrushCommands;
+import com.sk89q.worldedit.command.BrushOptionsCommands;
+import com.sk89q.worldedit.command.ChunkCommands;
+import com.sk89q.worldedit.command.ClipboardCommands;
+import com.sk89q.worldedit.command.GenerationCommands;
+import com.sk89q.worldedit.command.HistoryCommands;
+import com.sk89q.worldedit.command.NavigationCommands;
+import com.sk89q.worldedit.command.OptionsCommands;
+import com.sk89q.worldedit.command.RegionCommands;
+import com.sk89q.worldedit.command.SchematicCommands;
+import com.sk89q.worldedit.command.ScriptingCommands;
+import com.sk89q.worldedit.command.SelectionCommands;
+import com.sk89q.worldedit.command.SnapshotCommands;
+import com.sk89q.worldedit.command.SnapshotUtilCommands;
+import com.sk89q.worldedit.command.SuperPickaxeCommands;
+import com.sk89q.worldedit.command.ToolCommands;
+import com.sk89q.worldedit.command.UtilityCommands;
+import com.sk89q.worldedit.command.WorldEditCommands;
 import com.sk89q.worldedit.command.argument.ReplaceParser;
 import com.sk89q.worldedit.command.argument.TreeGeneratorParser;
 import com.sk89q.worldedit.command.composition.ApplyCommand;
@@ -49,15 +73,23 @@ import com.sk89q.worldedit.event.platform.CommandEvent;
 import com.sk89q.worldedit.event.platform.CommandSuggestionEvent;
 import com.sk89q.worldedit.function.factory.Deform;
 import com.sk89q.worldedit.function.factory.Deform.Mode;
-import com.sk89q.worldedit.internal.command.*;
-import com.sk89q.worldedit.scripting.CommandScriptLoader;
+import com.sk89q.worldedit.internal.command.ActorAuthorizer;
+import com.sk89q.worldedit.internal.command.CommandLoggingHandler;
+import com.sk89q.worldedit.internal.command.UserCommandCompleter;
+import com.sk89q.worldedit.internal.command.WorldEditBinding;
+import com.sk89q.worldedit.internal.command.WorldEditExceptionConverter;
 import com.sk89q.worldedit.session.request.Request;
 import com.sk89q.worldedit.util.auth.AuthorizationException;
-import com.sk89q.worldedit.util.command.*;
+import com.sk89q.worldedit.util.command.CallableProcessor;
+import com.sk89q.worldedit.util.command.CommandCallable;
+import com.sk89q.worldedit.util.command.Dispatcher;
+import com.sk89q.worldedit.util.command.InvalidUsageException;
 import com.sk89q.worldedit.util.command.composition.ProvidedValue;
 import com.sk89q.worldedit.util.command.fluent.CommandGraph;
 import com.sk89q.worldedit.util.command.fluent.DispatcherNode;
-import com.sk89q.worldedit.util.command.parametric.*;
+import com.sk89q.worldedit.util.command.parametric.ExceptionConverter;
+import com.sk89q.worldedit.util.command.parametric.LegacyCommandsHandler;
+import com.sk89q.worldedit.util.command.parametric.ParametricBuilder;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
 import com.sk89q.worldedit.util.logging.DynamicStreamHandler;
 import com.sk89q.worldedit.util.logging.LogFormat;
@@ -143,12 +175,6 @@ public final class CommandManager {
 
         this.methodMap = new ConcurrentHashMap<>();
         this.commandMap = new ConcurrentHashMap<>();
-
-        try {
-            Class.forName("com.intellectualcrafters.plot.PS");
-            CFICommand cfi = new CFICommand(worldEdit, builder);
-            registerCommands(cfi);
-        } catch (ClassNotFoundException e) {}
     }
 
     /**
@@ -306,12 +332,6 @@ public final class CommandManager {
     public void register(Platform platform) {
         log.log(Level.FINE, "Registering commands with " + platform.getClass().getCanonicalName());
         this.platform = null;
-
-        try {
-            new CommandScriptLoader().load();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
 
         LocalConfiguration config = platform.getConfiguration();
         boolean logging = config.logCommands;

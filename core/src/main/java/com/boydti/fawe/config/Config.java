@@ -3,7 +3,9 @@ package com.boydti.fawe.config;
 import com.boydti.fawe.Fawe;
 import com.boydti.fawe.configuration.MemorySection;
 import com.boydti.fawe.configuration.file.YamlConfiguration;
+import com.boydti.fawe.util.ReflectionUtils;
 import com.boydti.fawe.util.StringMan;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintWriter;
@@ -13,7 +15,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collection;
@@ -447,9 +448,6 @@ public class Config {
      * @throws IllegalAccessException
      */
     private void setAccessible(Field field) throws NoSuchFieldException, IllegalAccessException {
-        field.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+        ReflectionUtils.setAccessibleNonFinal(field);
     }
 }

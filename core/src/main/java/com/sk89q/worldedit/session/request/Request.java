@@ -21,11 +21,10 @@ package com.sk89q.worldedit.session.request;
 
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.LocalSession;
-import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extent.Extent;
-import com.sk89q.worldedit.util.command.parametric.ParametricCallable;
 import com.sk89q.worldedit.world.World;
+
 import javax.annotation.Nullable;
 
 /**

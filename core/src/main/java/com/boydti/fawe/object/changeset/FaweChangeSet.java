@@ -4,7 +4,6 @@ import com.boydti.fawe.Fawe;
 import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.FaweCache;
 import com.boydti.fawe.config.Settings;
-import com.boydti.fawe.logging.rollback.RollbackOptimizedHistory;
 import com.boydti.fawe.object.FaweChunk;
 import com.boydti.fawe.object.FawePlayer;
 import com.boydti.fawe.object.FaweQueue;
@@ -26,6 +25,7 @@ import com.sk89q.worldedit.history.changeset.ChangeSet;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.biome.BaseBiome;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -43,11 +43,7 @@ public abstract class FaweChangeSet implements ChangeSet {
 
     public static FaweChangeSet getDefaultChangeSet(World world, UUID uuid) {
         if (Settings.IMP.HISTORY.USE_DISK) {
-            if (Settings.IMP.HISTORY.USE_DATABASE) {
-                return new RollbackOptimizedHistory(world, uuid);
-            } else {
-                return new DiskStorageHistory(world, uuid);
-            }
+            return new DiskStorageHistory(world, uuid);
         } else {
             return new MemoryOptimizedHistory(world);
         }
