@@ -20,8 +20,7 @@ processResources {
     from('src/main/resources') {
         include 'fawe.properties'
         expand(
-                version: "${project.parent.version}",
-                name: project.parent.name,
+                version: project.version,
         )
     }
 
