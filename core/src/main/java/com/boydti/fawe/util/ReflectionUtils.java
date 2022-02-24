@@ -1,8 +1,8 @@
 package com.boydti.fawe.util;
 
-import sun.misc.Unsafe;
-import w.util.Root;
+import w.agent.AgentInstrumentation;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author DPOH-VAR
@@ -22,15 +23,38 @@ import java.util.Map;
  */
 @SuppressWarnings({"UnusedDeclaration", "rawtypes"})
 public class ReflectionUtils {
-    private static Unsafe UNSAFE;
+
+    private static final MethodHandles.Lookup IMPL_LOOKUP;
 
     static {
         try {
-            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-            unsafeField.setAccessible(true);
-            UNSAFE = (Unsafe) unsafeField.get(null);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            final Set<Module> currentModule = Collections.singleton(ReflectionUtils.class.getModule());
+
+            AgentInstrumentation.redefineModule(
+                    Object.class.getModule(),
+                    Collections.emptySet(),
+                    Map.of(
+                            "jdk.internal.misc", currentModule,
+                            "jdk.internal.loader", currentModule
+                    ),
+                    Map.of(
+                            "java.lang", currentModule,
+                            "java.lang.invoke", currentModule,
+                            "jdk.internal.misc", currentModule,
+                            "jdk.internal.loader", currentModule
+                    ),
+                    Collections.emptySet(),
+                    Collections.emptyMap()
+            );
+
+            final Field field = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
+            field.setAccessible(true);
+
+            if ((IMPL_LOOKUP = (MethodHandles.Lookup) field.get(null)) == null) {
+                throw new IllegalStateException("Lookup.IMPL_LOOKUP is null");
+            }
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -44,7 +68,7 @@ public class ReflectionUtils {
         if (Modifier.isFinal(field.getModifiers())) {
             try {
                 // blank out the final bit in the modifiers int
-                Root.trustedLookup()
+                IMPL_LOOKUP
                         .findSetter(Field.class, "modifiers", int.class)
                         .invokeExact(field, field.getModifiers() & ~Modifier.FINAL);
             } catch (Throwable e) {

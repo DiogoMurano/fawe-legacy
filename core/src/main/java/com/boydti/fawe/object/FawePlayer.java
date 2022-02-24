@@ -15,7 +15,6 @@ import com.boydti.fawe.util.EditSessionBuilder;
 import com.boydti.fawe.util.MainUtil;
 import com.boydti.fawe.util.SetQueue;
 import com.boydti.fawe.util.TaskManager;
-import com.boydti.fawe.util.Updater;
 import com.boydti.fawe.util.WEManager;
 import com.boydti.fawe.wrappers.FakePlayer;
 import com.boydti.fawe.wrappers.LocationMaskedPlayerWrapper;
@@ -159,10 +158,6 @@ public abstract class FawePlayer<T> extends Metadatable {
         Fawe.get().register(this);
         if (Settings.IMP.CLIPBOARD.USE_DISK) {
             loadClipboardFromDisk();
-        }
-        Updater updater = Fawe.get().getUpdater();
-        if (updater != null && updater.hasPending(this)) {
-            TaskManager.IMP.async(() -> updater.confirmUpdate(this));
         }
     }
 

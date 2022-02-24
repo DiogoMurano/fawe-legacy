@@ -14,7 +14,6 @@ import com.boydti.fawe.util.MemUtil;
 import com.boydti.fawe.util.RandomTextureUtil;
 import com.boydti.fawe.util.TaskManager;
 import com.boydti.fawe.util.TextureUtil;
-import com.boydti.fawe.util.Updater;
 import com.boydti.fawe.util.WEManager;
 import com.boydti.fawe.util.chat.ChatManager;
 import com.boydti.fawe.util.chat.PlainChatManager;
@@ -173,7 +172,6 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -231,7 +229,6 @@ public class Fawe {
     private final FaweTimer timer;
     private FaweVersion version;
     private VisualQueue visualQueue;
-    private Updater updater;
     private TextureUtil textures;
     private DefaultTransformParser transformParser;
     private ChatManager chatManager = new PlainChatManager();
@@ -368,27 +365,12 @@ public class Fawe {
         }, 0);
 
         TaskManager.IMP.repeat(timer, 1);
-
-        if (!Settings.IMP.UPDATE.equalsIgnoreCase("false")) {
-            // Delayed updating
-            updater = new Updater();
-            TaskManager.IMP.async(() -> update());
-            TaskManager.IMP.repeatAsync(() -> update(), 36000);
-        }
     }
 
     public void onDisable() {
         if (stats != null) {
             stats.close();
         }
-    }
-
-    private boolean update() {
-        if (updater != null) {
-            updater.getUpdate(IMP.getPlatform(), getVersion());
-            return true;
-        }
-        return false;
     }
 
     public CUI getCUI(Actor actor) {
@@ -426,16 +408,6 @@ public class Fawe {
 
     public DefaultTransformParser getTransformParser() {
         return transformParser;
-    }
-
-    /**
-     * The FAWE updater class
-     * - Use to get basic update information (changelog/version etc)
-     *
-     * @return
-     */
-    public Updater getUpdater() {
-        return updater;
     }
 
     public TextureUtil getCachedTextureUtil(boolean randomize, int min, int max) {
@@ -525,9 +497,6 @@ public class Fawe {
             String versionString = scanner.next().trim();
             scanner.close();
             this.version = new FaweVersion(versionString);
-            Settings.IMP.DATE = new Date(100 + version.year, version.month, version.day).toGMTString();
-            Settings.IMP.BUILD = "https://ci.athion.net/job/FastAsyncWorldEdit/" + version.build;
-            Settings.IMP.COMMIT = "https://github.com/boy0001/FastAsyncWorldedit/commit/" + Integer.toHexString(version.hash);
         } catch (Throwable ignore) {}
         Settings.IMP.reload(file);
         // Setting up message.yml

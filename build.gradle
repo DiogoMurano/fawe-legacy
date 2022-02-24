@@ -5,8 +5,8 @@ plugins {
 def releaseVersion = findProperty("github.tag") ?: getCommit()
 println("Version: ${releaseVersion}")
 
-group = 'com.boydti.fawe'
-version = releaseVersion;
+group = 'io.github.whilein.fawe-legacy'
+version = releaseVersion
 
 String getCommit() {
     def stdout = new ByteArrayOutputStream()
@@ -39,15 +39,6 @@ subprojects {
         maven { url "https://repo.dmulloy2.net/content/groups/public/" }
         // paper-api
         maven { url "https://repo.destroystokyo.com/repository/maven-public/" }
-
-        maven {
-            url "https://maven.pkg.github.com/whilein/wcommons"
-
-            credentials {
-                username = findProperty("gpr.user")
-                password = findProperty("gpr.password")
-            }
-        }
     }
 
     publishing {

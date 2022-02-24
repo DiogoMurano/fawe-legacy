@@ -22,9 +22,7 @@ package com.sk89q.worldedit.command;
 import com.boydti.fawe.Fawe;
 import com.boydti.fawe.FaweVersion;
 import com.boydti.fawe.config.BBC;
-import com.boydti.fawe.config.Settings;
-import com.boydti.fawe.object.FawePlayer;
-import com.boydti.fawe.util.*;
+import com.boydti.fawe.util.IncendoPaster;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
@@ -37,11 +35,13 @@ import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extension.platform.Capability;
 import com.sk89q.worldedit.extension.platform.Platform;
 import com.sk89q.worldedit.extension.platform.PlatformManager;
+
 import java.io.IOException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Map;
+import java.util.TimeZone;
 
 @Command(aliases = {"worldedit", "we", "fawe"}, desc = "Updating, informational, debug and help commands")
 public class WorldEditCommands {
@@ -62,27 +62,12 @@ public class WorldEditCommands {
     )
     public void version(Actor actor) throws WorldEditException {
         FaweVersion fVer = Fawe.get().getVersion();
-        String fVerStr = fVer == null ? "unknown" : fVer.year + "." + fVer.month + "." + fVer.day + "-" + Integer.toHexString(fVer.hash) + "-" + fVer.build;
-        actor.print(BBC.getPrefix() + "FAWE " + fVerStr + " by Empire92");
-        if (fVer != null) {
-            actor.printDebug("------------------------------------");
-            FaweVersion version = Fawe.get().getVersion();
-            Date date = new GregorianCalendar(2000 + version.year, version.month - 1, version.day).getTime();
-            actor.printDebug(" - DATE: " + date.toLocaleString());
-            actor.printDebug(" - COMMIT: " + Integer.toHexString(version.hash));
-            actor.printDebug(" - BUILD: #" + version.build);
-            actor.printDebug(" - PLATFORM: " + Settings.IMP.PLATFORM);
-            Updater updater = Fawe.get().getUpdater();
-            if (updater == null) {
-                actor.printDebug(" - UPDATES: DISABLED");
-            } else if (updater.isOutdated()) {
-                actor.printDebug(" - UPDATES: " + updater.getChanges().split("\n").length + " (see /fawe cl)");
-            } else {
-                actor.printDebug(" - UPDATES: Latest Version");
-            }
-            actor.printDebug("------------------------------------");
-        }
+
+        String fVerStr = fVer == null ? "unknown" : fVer.toString();
+
+        actor.print(BBC.getPrefix() + "FAWE " + fVerStr + " by Empire92, fork by Whilein");
         actor.print(BBC.getPrefix() + "WorldEdit " + WorldEdit.getVersion() + " by sk89q");
+
         PlatformManager pm = we.getPlatformManager();
         actor.printDebug("------------------------------------");
         actor.printDebug("Platforms:");
@@ -111,72 +96,6 @@ public class WorldEditCommands {
         we.getEventBus().post(new ConfigurationLoadEvent(we.getPlatformManager().queryCapability(Capability.CONFIGURATION).getConfiguration()));
         Fawe.get().setupConfigs();
         actor.print(BBC.getPrefix() + "Reloaded WorldEdit " + we.getVersion() + " and FAWE (" + Fawe.get().getVersion() + ")");
-    }
-
-    @Command(
-            aliases = {"update"},
-            usage = "",
-            desc = "Update the plugin",
-            min = 0,
-            max = 0
-    )
-    public void update(FawePlayer fp) throws WorldEditException {
-        if (Fawe.get().getUpdater().installUpdate(fp)) {
-            TaskManager.IMP.sync(() -> {
-                fp.executeCommand("restart");
-                return null;
-            });
-            fp.sendMessage(BBC.getPrefix() + "Please restart to finish installing the update");
-        } else {
-            fp.sendMessage(BBC.getPrefix() + "No update is pending");
-        }
-    }
-
-    @Command(
-            aliases = {"changelog", "cl"},
-            usage = "",
-            desc = "View the FAWE changelog",
-            min = 0,
-            max = 0
-    )
-    @CommandPermissions("worldedit.changelog")
-    public void changelog(Actor actor) throws WorldEditException {
-        try {
-            Updater updater = Fawe.get().getUpdater();
-            String changes = updater != null ? updater.getChanges() : null;
-
-            String url = "https://empcraft.com/fawe/cl?" + Integer.toHexString(Fawe.get().getVersion().hash);
-            if (changes == null) {
-                try (Scanner scanner = new Scanner(new URL(url).openStream(), "UTF-8")) {
-                    changes = scanner.useDelimiter("\\A").next();
-                }
-            }
-            changes = changes.replaceAll("#([0-9]+)", "github.com/boy0001/FastAsyncWorldedit/issues/$1");
-
-            String[] split = changes.substring(1).split("[\n](?! )");
-            if (changes.length() <= 1) actor.print(BBC.getPrefix() + "No description available");
-            else {
-                StringBuilder msg = new StringBuilder();
-                msg.append(BBC.getPrefix() + split.length + " commits:");
-                for (String change : split) {
-                    String[] split2 = change.split("\n    ");
-                    msg.append("\n&a&l" + split2[0]);
-                    if (split2.length != 0) {
-                        for (int i = 1; i < split2.length; i++) {
-                            msg.append('\n');
-                            String[] split3 = split2[i].split("\n");
-                            String subChange = "&8 - &7" + StringMan.join(split3, "\n&7   ");
-                            msg.append(subChange);
-                        }
-                    }
-                }
-                msg.append("\n&7More info: &9&o" + url);
-                msg.append("\n&7Discuss: &9&ohttps://discord.gg/ngZCzbU");
-                actor.print(BBC.color(msg.toString()));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Command(
