@@ -5,9 +5,6 @@ plugins {
 def releaseVersion = findProperty("github.tag") ?: getCommit()
 println("Version: ${releaseVersion}")
 
-group = 'io.github.whilein.fawe-legacy'
-version = releaseVersion
-
 String getCommit() {
     def stdout = new ByteArrayOutputStream()
 
@@ -24,6 +21,9 @@ subprojects {
     apply plugin: 'java-library'
 
     apply plugin: 'maven-publish'
+
+    group = 'io.github.whilein.fawe-legacy'
+    version = releaseVersion
 
     tasks.withType(JavaCompile) {
         sourceCompatibility = JavaVersion.VERSION_17
