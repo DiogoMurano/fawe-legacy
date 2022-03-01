@@ -158,7 +158,7 @@ import com.sk89q.worldedit.util.formatting.component.MessageBox;
 import com.sk89q.worldedit.world.biome.BaseBiome;
 import com.sk89q.worldedit.world.registry.BundledBlockData;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -174,6 +174,7 @@ import java.lang.management.MemoryUsage;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -463,8 +464,7 @@ public class Fawe {
      *
      * @return FaweVersion
      */
-    public
-    @Nullable
+    public @Nonnull
     FaweVersion getVersion() {
         return version;
     }
@@ -491,13 +491,13 @@ public class Fawe {
         // Setting up config.yml
         File file = new File(this.IMP.getDirectory(), "config.yml");
         Settings.IMP.PLATFORM = IMP.getPlatform().replace("\"", "");
-        try {
-            InputStream stream = getClass().getResourceAsStream("/fawe.properties");
-            java.util.Scanner scanner = new java.util.Scanner(stream).useDelimiter("\\A");
-            String versionString = scanner.next().trim();
-            scanner.close();
-            this.version = new FaweVersion(versionString);
-        } catch (Throwable ignore) {}
+
+        try (final InputStream stream = getClass().getResourceAsStream("/fawe.properties");
+             final Scanner scanner = new Scanner(Objects.requireNonNull(stream)).useDelimiter("\\A")) {
+            this.version = new FaweVersion(scanner.next().trim());
+        } catch (final Throwable ignored) {
+        }
+
         Settings.IMP.reload(file);
         // Setting up message.yml
         String lang = Objects.toString(Settings.IMP.LANGUAGE);

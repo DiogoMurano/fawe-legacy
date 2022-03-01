@@ -1,18 +1,19 @@
 package com.boydti.fawe;
 
 public class FaweVersion {
-    public final int hash, major, minor, patch;
+    public final String hash;
+    public final int major, minor, patch;
 
     public FaweVersion(final String version) {
-        String[] split = version.split("\\.");
+        final String[] split = version.substring(version.indexOf('=') + 1).split("\\.");
 
         if (split.length == 1) {
-            hash = !split[0].equals("unknown") ? Integer.valueOf(split[0], 16) : 0;
+            hash = !split[0].equals("unknown") ? split[0] : null;
             major = minor = patch = 0;
             return;
         }
 
-        this.hash = 0;
+        this.hash = null;
         this.major = Integer.parseInt(split[0]);
         this.minor = Integer.parseInt(split[1]);
         this.patch = Integer.parseInt(split[2]);
@@ -20,11 +21,11 @@ public class FaweVersion {
 
     @Override
     public String toString() {
-        return major + "." + minor + "." + patch;
+        return hash == null ? major + "." + minor + "." + patch : hash;
     }
 
     public boolean isSnapshot() {
-        return hash == 0;
+        return hash != null;
     }
 
     public boolean isNewer(FaweVersion other) {
