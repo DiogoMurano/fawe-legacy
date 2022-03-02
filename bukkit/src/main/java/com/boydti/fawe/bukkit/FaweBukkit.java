@@ -26,11 +26,9 @@ import com.boydti.fawe.object.FawePlayer;
 import com.boydti.fawe.object.FaweQueue;
 import com.boydti.fawe.regions.FaweMaskManager;
 import com.boydti.fawe.util.MainUtil;
-import com.boydti.fawe.util.ReflectionUtils;
 import com.boydti.fawe.util.TaskManager;
 import com.boydti.fawe.util.cui.CUI;
 import com.boydti.fawe.util.image.ImageViewer;
-import com.boydti.fawe.util.metrics.BStats;
 import com.sk89q.bukkit.util.FallbackRegistrationListener;
 import com.sk89q.worldedit.bukkit.BukkitPlayerBlockBag;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
@@ -45,7 +43,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -208,44 +205,6 @@ public class FaweBukkit implements IFawe, Listener {
         } else {
             return null;
         }
-    }
-
-    @Override
-    public void startMetrics() {
-        Metrics metrics = new Metrics(plugin);
-        metrics.start();
-        TaskManager.IMP.task(new Runnable() {
-            @Override
-            public void run() {
-                ArrayList<Class<?>> services = new ArrayList(Bukkit.getServicesManager().getKnownServices());
-                services.forEach(service -> {
-                    try {
-                        service.getField("B_STATS_VERSION");
-                        ArrayList<RegisteredServiceProvider<?>> providers = new ArrayList(Bukkit.getServicesManager().getRegistrations(service));
-                        for (RegisteredServiceProvider<?> provider : providers) {
-                            Object instance = provider.getProvider();
-
-                            // Link it to FAWE's metrics instead
-                            BStats.linkMetrics(instance);
-
-                            // Disable the other metrics
-                            Bukkit.getServicesManager().unregister(service, instance);
-                            try {
-                                Class<? extends Object> clazz = instance.getClass();
-                                Field logFailedRequests = ReflectionUtils.findField(clazz, boolean.class);
-                                logFailedRequests.set(null, false);
-                                Field url = null;
-                                try { url = clazz.getDeclaredField("URL"); } catch (NoSuchFieldException ignore) {
-                                for (Field field : clazz.getDeclaredFields()) if (ReflectionUtils.setAccessible(field).get(null).toString().startsWith("http")) { url = field; break; }
-                                }
-                                if (url != null) ReflectionUtils.setFailsafeFieldValue(url, null, null);
-                            } catch (NoSuchFieldError | IllegalAccessException ignore) {}
-                            catch (Throwable e) {}
-                        }
-                    } catch (NoSuchFieldException ignored) { }
-                });
-            }
-        });
     }
 
     public ItemUtil getItemUtil() {

@@ -9,6 +9,7 @@ import com.boydti.fawe.util.cui.CUI;
 import com.boydti.fawe.util.gui.FormBuilder;
 import com.boydti.fawe.util.image.ImageViewer;
 import com.sk89q.worldedit.world.World;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.UUID;
@@ -33,8 +34,6 @@ public interface IFawe {
     public String getWorldName(World world);
 
     public Collection<FaweMaskManager> getMaskManagers();
-
-    public void startMetrics();
 
     default CUI getCUI(FawePlayer player) { return null; }
 

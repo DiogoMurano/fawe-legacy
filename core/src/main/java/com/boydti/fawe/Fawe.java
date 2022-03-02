@@ -18,7 +18,6 @@ import com.boydti.fawe.util.WEManager;
 import com.boydti.fawe.util.chat.ChatManager;
 import com.boydti.fawe.util.chat.PlainChatManager;
 import com.boydti.fawe.util.cui.CUI;
-import com.boydti.fawe.util.metrics.BStats;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.jnbt.CompoundTagBuilder;
 import com.sk89q.jnbt.ListTag;
@@ -234,8 +233,6 @@ public class Fawe {
     private DefaultTransformParser transformParser;
     private ChatManager chatManager = new PlainChatManager();
 
-    private BStats stats;
-
     /**
      * Get the implementation specific class
      *
@@ -322,20 +319,6 @@ public class Fawe {
             }
         });
 
-        if (Settings.IMP.METRICS) {
-            try {
-                this.stats = new BStats();
-                this.IMP.startMetrics();
-                TaskManager.IMP.later(new Runnable() {
-                    @Override
-                    public void run() {
-                        stats.start();
-                    }
-                }, 1);
-            } catch (Throwable ignore) {
-                ignore.printStackTrace();
-            }
-        }
         this.setupCommands();
         /*
          * Instance independent stuff
@@ -366,12 +349,6 @@ public class Fawe {
         }, 0);
 
         TaskManager.IMP.repeat(timer, 1);
-    }
-
-    public void onDisable() {
-        if (stats != null) {
-            stats.close();
-        }
     }
 
     public CUI getCUI(Actor actor) {
