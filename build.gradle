@@ -26,17 +26,19 @@ subprojects {
     version = releaseVersion
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
         options.encoding = "UTF-8"
     }
 
     repositories {
         mavenCentral()
+        // aikar
+        maven { url "https://repo.aikar.co/content/groups/aikar/" }
         // worldguard
         maven { url "https://maven.enginehub.org/repo/" }
         // protocollib
-        maven { url "https://repo.dmulloy2.net/content/groups/public/" }
+        maven { url "https://repo.dmulloy2.net/repository/public/" }
         // paper-api
         maven { url "https://repo.destroystokyo.com/repository/maven-public/" }
     }
