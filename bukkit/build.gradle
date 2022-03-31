@@ -9,7 +9,7 @@ dependencies {
     compileOnly files("$rootDir/libs/paper-1.10.2.jar")
     compileOnly files("$rootDir/libs/paper-1.9.4.jar")
     compileOnly files("$rootDir/libs/paper-1.8.8.jar")
-    compileOnly 'com.comphenix.protocol:ProtocolLib-API:4.4.0'
+    compileOnly 'com.comphenix.protocol:ProtocolLib:4.6.0'
 
     api 'com.sk89q.worldedit:worldedit-bukkit:6.1.4-SNAPSHOT'
     api 'com.sk89q.worldedit:worldedit-core:6.1.4-SNAPSHOT'
