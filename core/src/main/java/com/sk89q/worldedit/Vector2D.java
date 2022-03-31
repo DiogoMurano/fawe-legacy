@@ -620,9 +620,11 @@ public class Vector2D implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Vector2D other
-               && other.getX() == this.getX()
-               && other.getZ() == this.getZ();
+        if (!(obj instanceof Vector2D)) return false;
+
+        Vector2D other = (Vector2D) obj;
+
+        return other.getX() == this.getX() && other.getZ() == this.getZ();
     }
 
     @Override
