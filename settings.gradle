@@ -2,4 +2,3 @@ rootProject.name = 'fawe-legacy'
 
 include ':core'
 include ':bukkit'
-include ':agent'
