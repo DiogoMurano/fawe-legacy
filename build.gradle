@@ -22,12 +22,12 @@ subprojects {
 
     apply plugin: 'maven-publish'
 
-    group = 'io.github.whilein.fawe-legacy'
+    group = 'io.github.DiogoMurano.fawe-legacy'
     version = releaseVersion
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
         options.encoding = "UTF-8"
     }
 
@@ -55,7 +55,7 @@ subprojects {
 
             // github packages
             maven {
-                url = "https://maven.pkg.github.com/whilein/fawe-legacy"
+                url = "https://maven.pkg.github.com/DiogoMurano/fawe-legacy"
 
                 credentials {
                     username = findProperty("gpr.user")

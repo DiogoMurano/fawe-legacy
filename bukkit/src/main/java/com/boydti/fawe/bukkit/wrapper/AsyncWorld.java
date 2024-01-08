@@ -187,7 +187,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public WorldBorder getWorldBorder() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<WorldBorder>() {
             @Override
             public void run(final WorldBorder value) {
                 this.value = parent.getWorldBorder();
@@ -252,7 +252,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public int getEntityCount() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(final Integer value) {
                 this.value = parent.getEntityCount();
@@ -262,7 +262,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public int getTileEntityCount() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(final Integer value) {
                 this.value = parent.getTileEntityCount();
@@ -272,7 +272,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public int getTickableTileEntityCount() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(final Integer value) {
                 this.value = parent.getTickableTileEntityCount();
@@ -282,7 +282,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public int getChunkCount() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(final Integer value) {
                 this.value = parent.getChunkCount();
@@ -292,7 +292,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public int getPlayerCount() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(final Integer value) {
                 this.value = parent.getPlayerCount();
@@ -397,7 +397,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     public void loadChunk(final Chunk chunk) {
         if (!chunk.isLoaded()) {
-            TaskManager.IMP.sync(new RunnableVal<>() {
+            TaskManager.IMP.sync(new RunnableVal<Object>() {
                 @Override
                 public void run(final Object value) {
                     parent.loadChunk(chunk);
@@ -433,7 +433,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     public void loadChunk(final int x, final int z) {
         if (!isChunkLoaded(x, z)) {
-            TaskManager.IMP.sync(new RunnableVal<>() {
+            TaskManager.IMP.sync(new RunnableVal<Object>() {
                 @Override
                 public void run(final Object value) {
                     parent.loadChunk(x, z);
@@ -445,7 +445,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     public boolean loadChunk(final int x, final int z, final boolean generate) {
         if (!isChunkLoaded(x, z)) {
-            return TaskManager.IMP.sync(new RunnableVal<>() {
+            return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
                 @Override
                 public void run(final Boolean value) {
                     this.value = parent.loadChunk(x, z, generate);
@@ -458,7 +458,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     public boolean unloadChunk(final Chunk chunk) {
         if (chunk.isLoaded()) {
-            return TaskManager.IMP.sync(new RunnableVal<>() {
+            return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
                 @Override
                 public void run(final Boolean value) {
                     this.value = parent.unloadChunk(chunk);
@@ -482,7 +482,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     public boolean unloadChunk(final int x, final int z, final boolean save, final boolean safe) {
         if (isChunkLoaded(x, z)) {
-            return TaskManager.IMP.sync(new RunnableVal<>() {
+            return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
                 @Override
                 public void run(final Boolean value) {
                     this.value = parent.unloadChunk(x, z, save, safe);
@@ -504,7 +504,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public boolean regenerateChunk(final int x, final int z) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
             @Override
             public void run(final Boolean value) {
                 this.value = parent.regenerateChunk(x, z);
@@ -521,7 +521,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public Item dropItem(final Location location, final ItemStack item) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Item>() {
             @Override
             public void run(final Item value) {
                 this.value = parent.dropItem(location, item);
@@ -531,7 +531,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public Item dropItemNaturally(final Location location, final ItemStack item) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Item>() {
             @Override
             public void run(final Item value) {
                 this.value = parent.dropItemNaturally(location, item);
@@ -541,7 +541,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public Arrow spawnArrow(final Location location, final Vector direction, final float speed, final float spread) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Arrow>() {
             @Override
             public void run(final Arrow value) {
                 this.value = parent.spawnArrow(location, direction, speed, spread);
@@ -556,7 +556,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public boolean generateTree(final Location location, final TreeType type) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
             @Override
             public void run(final Boolean value) {
                 this.value = parent.generateTree(location, type);
@@ -566,7 +566,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public boolean generateTree(final Location loc, final TreeType type, final BlockChangeDelegate delegate) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
             @Override
             public void run(final Boolean value) {
                 this.value = parent.generateTree(loc, type, delegate);
@@ -581,7 +581,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public LightningStrike strikeLightning(final Location loc) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<LightningStrike>() {
             @Override
             public void run(final LightningStrike value) {
                 this.value = parent.strikeLightning(loc);
@@ -591,7 +591,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public LightningStrike strikeLightningEffect(final Location loc) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<LightningStrike>() {
             @Override
             public void run(final LightningStrike value) {
                 this.value = parent.strikeLightningEffect(loc);
@@ -611,7 +611,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public List<LivingEntity> getLivingEntities() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<List<LivingEntity>>() {
             @Override
             public void run(final List<LivingEntity> value) {
                 this.value = parent.getLivingEntities();
@@ -622,7 +622,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     @Deprecated
     public <T extends Entity> Collection<T> getEntitiesByClass(final Class<T>... classes) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Collection<T>>() {
             @Override
             public void run(final Collection<T> value) {
                 this.value = parent.getEntitiesByClass(classes);
@@ -632,7 +632,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public <T extends Entity> Collection<T> getEntitiesByClass(final Class<T> cls) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Collection<T>>() {
             @Override
             public void run(final Collection<T> value) {
                 this.value = parent.getEntitiesByClass(cls);
@@ -642,7 +642,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public Collection<Entity> getEntitiesByClasses(final Class<?>... classes) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Collection<Entity>>() {
             @Override
             public void run(final Collection<Entity> value) {
                 this.value = parent.getEntitiesByClasses(classes);
@@ -652,7 +652,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public List<Player> getPlayers() {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<List<Player>>() {
             @Override
             public void run(final List<Player> value) {
                 this.value = parent.getPlayers();
@@ -662,7 +662,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public Collection<Entity> getNearbyEntities(final Location location, final double x, final double y, final double z) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Collection<Entity>>() {
             @Override
             public void run(final Collection<Entity> value) {
                 this.value = parent.getNearbyEntities(location, x, y, z);
@@ -697,7 +697,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public boolean setSpawnLocation(final int x, final int y, final int z) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
             @Override
             public void run(final Boolean value) {
                 this.value = parent.setSpawnLocation(x, y, z);
@@ -774,7 +774,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     }
 
     public boolean createExplosion(final double x, final double y, final double z, final float power, final boolean setFire, final boolean breakBlocks) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
             @Override
             public void run(final Boolean value) {
                 this.value = parent.createExplosion(x, y, z, power, setFire, breakBlocks);
@@ -792,7 +792,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public boolean createExplosion(Entity entity, Location location, float v, boolean b, boolean b1) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<Boolean>() {
             @Override
             public void run(final Boolean value) {
                 this.value = parent.createExplosion(entity, location, v, b, b1);
@@ -827,7 +827,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void save() {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.save();
@@ -842,7 +842,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public <T extends Entity> T spawn(final Location location, final Class<T> clazz) throws IllegalArgumentException {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<T>() {
             @Override
             public void run(final T value) {
                 this.value = parent.spawn(location, clazz);
@@ -852,7 +852,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public <T extends Entity> T spawn(final Location location, final Class<T> clazz, final Consumer<T> function) throws IllegalArgumentException {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<T>() {
             @Override
             public void run(final T value) {
                 this.value = parent.spawn(location, clazz, function);
@@ -862,7 +862,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public FallingBlock spawnFallingBlock(final Location location, final MaterialData data) throws IllegalArgumentException {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<FallingBlock>() {
             @Override
             public void run(final FallingBlock value) {
                 this.value = parent.spawnFallingBlock(location, data);
@@ -879,7 +879,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     @Deprecated
     public FallingBlock spawnFallingBlock(final Location location, final int blockId, final byte blockData) throws IllegalArgumentException {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<FallingBlock>() {
             @Override
             public void run(final FallingBlock value) {
                 this.value = parent.spawnFallingBlock(location, blockId, blockData);
@@ -894,7 +894,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void playEffect(final Location location, final Effect effect, final int data, final int radius) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.playEffect(location, effect, data, radius);
@@ -909,7 +909,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public <T> void playEffect(final Location location, final Effect effect, final T data, final int radius) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.playEffect(location, effect, data, radius);
@@ -919,7 +919,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public ChunkSnapshot getEmptyChunkSnapshot(final int x, final int z, final boolean includeBiome, final boolean includeBiomeTempRain) {
-        return TaskManager.IMP.sync(new RunnableVal<>() {
+        return TaskManager.IMP.sync(new RunnableVal<ChunkSnapshot>() {
             @Override
             public void run(final ChunkSnapshot value) {
                 this.value = parent.getEmptyChunkSnapshot(x, z, includeBiome, includeBiomeTempRain);
@@ -980,7 +980,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void setKeepSpawnInMemory(final boolean keepLoaded) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.setKeepSpawnInMemory(keepLoaded);
@@ -1085,7 +1085,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void playSound(final Location location, final Sound sound, final float volume, final float pitch) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.playSound(location, sound, volume, pitch);
@@ -1095,7 +1095,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void playSound(final Location location, final String sound, final float volume, final float pitch) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.playSound(location, sound, volume, pitch);
@@ -1105,7 +1105,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void playSound(final Location location, final Sound sound, final SoundCategory category, final float volume, final float pitch) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.playSound(location, sound, category, volume, pitch);
@@ -1115,7 +1115,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void playSound(final Location location, final String sound, final SoundCategory category, final float volume, final float pitch) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.playSound(location, sound, category, volume, pitch);
@@ -1150,7 +1150,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void setMetadata(final String key, final MetadataValue meta) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.setMetadata(key, meta);
@@ -1170,7 +1170,7 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
 
     @Override
     public void removeMetadata(final String key, final Plugin plugin) {
-        TaskManager.IMP.sync(new RunnableVal<>() {
+        TaskManager.IMP.sync(new RunnableVal<Object>() {
             @Override
             public void run(final Object value) {
                 parent.removeMetadata(key, plugin);
