@@ -1,8 +1,5 @@
 package com.boydti.fawe.util;
 
-import w.agent.AgentInstrumentation;
-
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -10,12 +7,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import sun.reflect.ConstructorAccessor;
+import sun.reflect.FieldAccessor;
+import sun.reflect.ReflectionFactory;
 
 /**
  * @author DPOH-VAR
@@ -23,67 +19,13 @@ import java.util.Set;
  */
 @SuppressWarnings({"UnusedDeclaration", "rawtypes"})
 public class ReflectionUtils {
-
-    private static final MethodHandles.Lookup IMPL_LOOKUP;
-
-    static {
-        try {
-            final Set<Module> currentModule = Collections.singleton(ReflectionUtils.class.getModule());
-
-            AgentInstrumentation.redefineModule(
-                    Object.class.getModule(),
-                    Collections.emptySet(),
-                    Map.of(
-                            "jdk.internal.misc", currentModule,
-                            "jdk.internal.loader", currentModule
-                    ),
-                    Map.of(
-                            "java.lang", currentModule,
-                            "java.lang.invoke", currentModule,
-                            "jdk.internal.misc", currentModule,
-                            "jdk.internal.loader", currentModule
-                    ),
-                    Collections.emptySet(),
-                    Collections.emptyMap()
-            );
-
-            final Field field = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
-            field.setAccessible(true);
-
-            if ((IMPL_LOOKUP = (MethodHandles.Lookup) field.get(null)) == null) {
-                throw new IllegalStateException("Lookup.IMPL_LOOKUP is null");
-            }
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void setAccessibleNonFinal(Field field) {
-        // let's make the field accessible
-        field.setAccessible(true);
-
-        // next we change the modifier in the Field instance to
-        // not be final anymore, thus tricking reflection into
-        // letting us modify the static final field
-        if (Modifier.isFinal(field.getModifiers())) {
-            try {
-                // blank out the final bit in the modifiers int
-                IMPL_LOOKUP
-                        .findSetter(Field.class, "modifiers", int.class)
-                        .invokeExact(field, field.getModifiers() & ~Modifier.FINAL);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public static <T> T as(Class<T> t, Object o) {
         return t.isInstance(o) ? t.cast(o) : null;
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName) {
-        return addEnum(enumType, enumName, new Class<?>[]{}, new Object[]{});
+        return addEnum(enumType, enumName, new Class<?>[]{} , new Object[]{});
     }
 
     public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName, Class<?>[] additionalTypes, Object[] additionalValues) {
@@ -166,22 +108,36 @@ public class ReflectionUtils {
         return enumClass.cast(getConstructorAccessor(enumClass, additionalTypes).newInstance(parms));
     }
 
-    private static Constructor getConstructorAccessor(Class<?> enumClass,
-                                                      Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
+    private static ConstructorAccessor getConstructorAccessor(Class<?> enumClass,
+                                                              Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
         Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
         parameterTypes[0] = String.class;
         parameterTypes[1] = int.class;
         System.arraycopy(additionalParameterTypes, 0,
                 parameterTypes, 2, additionalParameterTypes.length);
-        return enumClass.getDeclaredConstructor(parameterTypes);
+        return ReflectionFactory.getReflectionFactory().newConstructorAccessor(enumClass.getDeclaredConstructor(parameterTypes));
     }
 
     public static void setFailsafeFieldValue(Field field, Object target, Object value)
             throws NoSuchFieldException, IllegalAccessException {
-        setAccessibleNonFinal(field);
+
+        // let's make the field accessible
+        field.setAccessible(true);
+
+        // next we change the modifier in the Field instance to
+        // not be final anymore, thus tricking reflection into
+        // letting us modify the static final field
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        int modifiers = modifiersField.getInt(field);
+
+        // blank out the final bit in the modifiers int
+        modifiers &= ~Modifier.FINAL;
+        modifiersField.setInt(field, modifiers);
 
         try {
-            field.set(target, value);
+            FieldAccessor fa = ReflectionFactory.getReflectionFactory().newFieldAccessor(field, false);
+            fa.set(target, value);
         } catch (NoSuchMethodError error) {
             field.set(target, value);
         }

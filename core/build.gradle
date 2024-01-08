@@ -2,7 +2,6 @@ repositories {
     flatDir { dirs 'lib' }
 }
 dependencies {
-    implementation project(":agent")
     implementation 'org.yaml:snakeyaml:1.16'
     implementation 'com.google.code.gson:gson:2.2.4'
     implementation 'com.github.luben:zstd-jni:1.1.1'
